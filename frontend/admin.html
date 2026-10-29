@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Stock Market Prediction</title>
+  <meta name="description" content="Administrator control panel for Stock Market Prediction platform." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    document.documentElement.setAttribute('data-theme', 'dark');
+  </script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" />
+  <style>
+    /* ── Admin-specific styles ─────────────────────────── */
+    .admin-topbar-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(242,61,92,0.12); border: 1px solid rgba(242,61,92,0.25);
+      border-radius: 999px; padding: 4px 12px;
+      font-size: 11px; font-weight: 700; color: #f23d5c;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .pulse-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #f23d5c;
+      animation: pdot 2s infinite;
+    }
+    @keyframes pdot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    /* Stat cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 20px 18px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: var(--transition-fast);
+      position: relative; overflow: hidden;
+    }
+    .stat-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 3px; border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      background: var(--stat-color, var(--accent)); opacity: .6;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-ambient); }
+    .stat-icon {
+      width: 38px; height: 38px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-family: 'Material Icons Round', sans-serif;
+      background: color-mix(in srgb, var(--stat-color, var(--accent)) 12%, transparent);
+      color: var(--stat-color, var(--accent));
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-family: 'Manrope', sans-serif; font-size: 26px; font-weight: 800;
+      color: var(--text); line-height: 1;
+    }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .stat-sub { font-size: 11px; color: var(--success); font-weight: 600; }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex; gap: 4px; background: var(--surface-low);
+      border-radius: var(--radius-lg); padding: 4px; margin-bottom: 20px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 8px 18px; border-radius: var(--radius-md); border: none;
+      background: transparent; color: var(--muted); font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: var(--transition-fast);
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+    .tab-btn.active {
+      background: var(--surface-lowest); color: var(--text);
+      box-shadow: var(--shadow-card);
+    }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Search bar */
+    .search-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .search-wrap { position: relative; flex: 1; max-width: 360px; }
+    .search-wrap input {
+      padding-left: 40px; background: var(--surface-lowest);
+      border: 1px solid var(--border);
+    }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: 18px; font-family: 'Material Icons Round';
+      pointer-events: none;
+    }
+
+    /* Live users badge */
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,200,112,0.1); border: 1px solid rgba(0,200,112,0.25);
+      border-radius: 999px; padding: 6px 16px;
+      font-size: 13px; font-weight: 700; color: #00c870;
+    }
+    .live-pulse {
+      width: 8px; height: 8px; border-radius: 50%; background: #00c870;
+      animation: pdot 1.4s infinite;
+    }
+
+    /* User detail modal layer */
+    .detail-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 200; backdrop-filter: blur(6px);
+    }
+    .detail-overlay.open { display: flex; }
+    .detail-panel {
+      background: var(--surface-lowest);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-2xl);
+      padding: 28px; width: 90%; max-width: 680px;
+      max-height: 85vh; overflow-y: auto;
+      box-shadow: var(--shadow-elevated);
+      position: relative;
+    }
+    .detail-close {
+      position: absolute; top: 18px; right: 18px;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--surface-low);
+      cursor: pointer; font-size: 16px; display: flex;
+      align-items: center; justify-content: center; color: var(--muted);
+    }
+    .detail-close:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* Sidebar admin link */
+    .nav-link.admin-link {
+      background: rgba(242,61,92,0.06);
+      border: 1px solid rgba(242,61,92,0.15);
+      color: #f23d5c;
+    }
+    .nav-link.admin-link:hover { background: rgba(242,61,92,0.12); }
+
+    /* Logout admin */
+    #adminLogoutBtn {
+      background: var(--surface-high); border: 1px solid var(--border);
+      color: var(--text); font-weight: 600; width: 100%;
+    }
+    #adminLogoutBtn:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+    /* Section header */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'Manrope', sans-serif; font-size: 18px;
+      font-weight: 700; color: var(--text); margin: 0;
+    }
+
+    /* Action btn in table */
+    .tbl-action {
+      padding: 5px 12px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--surface-low);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      color: var(--text); transition: var(--transition-fast);
+    }
+    .tbl-action:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tbl-action.danger:hover { background: var(--danger); border-color: var(--danger); color:#fff; }
+
+    /* Avatar */
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0;
+    }
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 48px 20px; color: var(--muted);
+    }
+    .empty-state .empty-icon {
+      font-size: 48px; font-family: 'Material Icons Round';
+      display: block; margin-bottom: 12px; opacity: .4;
+    }
+
+    /* Scrollable table wrapper */
+    .admin-table-wrap {
+      border-radius: var(--radius-lg); overflow: auto;
+      border: 1px solid var(--border); max-height: 55vh;
+    }
+
+    /* Portfolio bar */
+    .port-bar-wrap { margin-top: 4px; }
+    .port-bar { height: 4px; border-radius: 99px; background: var(--surface-high); }
+    .port-bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="cursor-blob" id="cursorBlob"></div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <a href="admin.html" class="brand-link" aria-label="SMP Admin Console">
+        <div class="brand-logo-mark admin-mark">
+          <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="11" width="2.2" height="6" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="10.4" y="7" width="2.2" height="10" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="16.8" y="4" width="2.2" height="8" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <path d="M3 17.5L8.5 12L13 16.5L21 6.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 6.5H21V11.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="21" cy="6.5" r="2" fill="#f43f5e"/>
+          </svg>
+        </div>
+        <div class="brand-details">
+          <div class="brand-name-row">
+            <span class="brand-name">SMP</span>
+            <span class="brand-tag admin-tag">ADMIN</span>
+          </div>
+          <span class="brand-tagline">Control Panel</span>
+        </div>
+      </a>
+
+      <div style="margin-top: 16px;">
+        <div class="admin-topbar-badge">
+          <span class="pulse-dot"></span> Admin Mode
+        </div>
+      </div>
+
+      <nav class="nav" style="margin-top: 20px;">
+        <a class="nav-link active" href="admin.html">
+          <span class="material-icons-round" style="font-size:20px">admin_panel_settings</span>
+          Overview
+        </a>
+        <a class="nav-link" href="admin.html#users" id="navUsers" onclick="switchTab('users');return false;">
+          <span class="material-icons-round" style="font-size:20px">group</span>
+          Users
+        </a>
+        <a class="nav-link" href="admin.html#watchlists" id="navWatchlists" onclick="switchTab('watchlists');return false;">
+          <span class="material-icons-round" style="font-size:20px">bookmark</span>
+          Watchlists
+        </a>
+        <a class="nav-link" href="admin.html#portfolios" id="navPortfolios" onclick="switchTab('portfolios');return false;">
+          <span class="material-icons-round" style="font-size:20px">account_balance_wallet</span>
+          Portfolios
+        </a>
+        <a class="nav-link" href="admin.html#trades" id="navTrades" onclick="switchTab('trades');return false;">
+          <span class="material-icons-round" style="font-size:20px">swap_horiz</span>
+          Trades
+        </a>
+        <a class="nav-link" href="admin.html#feedback" id="navFeedback" onclick="switchTab('feedback');return false;">
+          <span class="material-icons-round" style="font-size:20px">forum</span>
+          Help & Feedback
+        </a>
+        <hr style="border:none; border-top: 1px solid var(--border); margin: 12px 0;" />
+        <a class="nav-link" href="dashboard.html">
+          <span class="material-icons-round" style="font-size:20px">dashboard</span>
+          User Dashboard
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="adminLogoutBtn" class="btn" type="button">
+          <span class="material-icons-round" style="font-size:18px">logout</span>
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">Admin Panel</h1>
+          <p id="adminWelcome" style="margin-top:4px; color:var(--muted); font-size:14px;">Loading…</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="live-badge">
+            <span class="live-pulse"></span>
+            <span id="liveUsersCount">0</span> online now
+          </div>
+          <button id="refreshAllBtn" class="btn btn-secondary btn-sm" type="button">
+            <span class="material-icons-round" style="font-size:16px">refresh</span> Refresh
+          </button>
+        </div>
+      </header>
+
+      <!-- STAT CARDS -->
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-card" style="--stat-color:#4f7cff">
+          <div class="stat-icon">group</div>
+          <div class="stat-value" id="statTotalUsers">—</div>
+          <div class="stat-label">Total Users</div>
+          <div class="stat-sub" id="statNewUsers"></div>
+        </div>
+        <div class="stat-card" style="--stat-color:#00c870">
+          <div class="stat-icon">wifi</div>
+          <div class="stat-value" id="statActive">—</div>
+          <div class="stat-label">Active Right Now</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#f5a623">
+          <div class="stat-icon">swap_horiz</div>
+          <div class="stat-value" id="statTrades">—</div>
+          <div class="stat-label">Total Trades</div>
+          <div class="stat-sub" id="statTradesToday"></div>
+        </div>
+        <div class="stat-card" style="--stat-color:#c84bff">
+          <div class="stat-icon">account_balance</div>
+          <div class="stat-value" id="statPortValue">—</div>
+          <div class="stat-label">Total Portfolio Value</div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-overview" onclick="switchTab('overview')">
+          <span class="material-icons-round" style="font-size:16px">dashboard</span> Overview
+        </button>
+        <button class="tab-btn" id="tab-users" onclick="switchTab('users')">
+          <span class="material-icons-round" style="font-size:16px">group</span> Users
+        </button>
+        <button class="tab-btn" id="tab-watchlists" onclick="switchTab('watchlists')">
+          <span class="material-icons-round" style="font-size:16px">bookmark</span> Watchlists
+        </button>
+        <button class="tab-btn" id="tab-portfolios" onclick="switchTab('portfolios')">
+          <span class="material-icons-round" style="font-size:16px">pie_chart</span> Portfolios
+        </button>
+        <button class="tab-btn" id="tab-trades" onclick="switchTab('trades')">
+          <span class="material-icons-round" style="font-size:16px">swap_horiz</span> Trades
+        </button>
+        <button class="tab-btn" id="tab-feedback" onclick="switchTab('feedback')">
+          <span class="material-icons-round" style="font-size:16px">forum</span> Help & Feedback
+        </button>
+      </div>
+
+      <!-- OVERVIEW TAB -->
+      <div class="tab-panel active" id="panel-overview">
+        <div class="section-header">
+          <h2 class="section-title">Recent Registrations</h2>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="table" id="recentUsersTable">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Balance</th>
+                <th>Holdings</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recentUsersTbody">
+              <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div class="tab-panel" id="panel-users">
+        <div class="section-header">
+          <h2 class="section-title">All Users</h2>
+          <span id="userCountBadge" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+        <div class="search-row">
+          <div class="search-wrap">
+            <span class="search-icon">search</span>
+            <input type="text" id="userSearch" placeholder="Search by name or email…" />
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadUsers()">
+            <span class="material-icons-round" style="font-size:15px">search</span> Search
+          </button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Balance</th>
+                <th>Holdings</th>
+                <th>Trades</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTbody">
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Loading users…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- WATCHLISTS TAB -->
+      <div class="tab-panel" id="panel-watchlists">
+        <div class="section-header">
+          <h2 class="section-title">User Watchlists (Holdings)</h2>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Stocks Held</th>
+                <th>Holdings Detail</th>
+              </tr>
+            </thead>
+            <tbody id="watchlistsTbody">
+              <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PORTFOLIOS TAB -->
+      <div class="tab-panel" id="panel-portfolios">
+        <script>
+          document.documentElement.setAttribute('data-theme', 'dark');
+        </script>
+        <div class="section-header">
+          <h2 class="section-title">User Portfolios</h2>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Cash Balance</th>
+                <th>Portfolio Value</th>
+                <th>Total Wealth</th>
+                <th>Holdings</th>
+              </tr>
+            </thead>
+            <tbody id="portfoliosTbody">
+              <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TRADES TAB -->
+      <div class="tab-panel" id="panel-trades">
+        <div class="section-header">
+          <h2 class="section-title">All Trades</h2>
+          <span id="tradeCountBadge" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Symbol</th>
+                <th>Type</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="tradesTbody">
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="tradePagination" style="display:flex;gap:8px;justify-content:center;margin-top:16px;"></div>
+      </div>
+      
+      <!-- HELP & FEEDBACK TAB -->
+      <div class="tab-panel" id="panel-feedback">
+        <div class="section-header">
+          <h2 class="section-title">User Help & Feedback Inbox</h2>
+          <span id="feedbackCountBadge" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User / Email</th>
+                <th>Type</th>
+                <th>Rating</th>
+                <th>Subject</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="feedbackTbody">
+              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- USER DETAIL OVERLAY -->
+  <div class="detail-overlay" id="detailOverlay">
+    <div class="detail-panel" id="detailPanel">
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+      <div id="detailContent"><p style="color:var(--muted)">Loading…</p></div>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

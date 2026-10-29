@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Prediction - Comprehensive Project Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #1e40af;
+            --primary-light: #eff6ff;
+            --secondary: #0f172a;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            line-height: 1.7;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: var(--white);
+            padding: 60px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 30px;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.8rem;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        section {
+            margin-bottom: 50px;
+            page-break-inside: avoid;
+        }
+
+        h2 {
+            border-left: 6px solid var(--primary);
+            padding-left: 20px;
+            color: var(--secondary);
+            font-size: 1.8rem;
+            margin-top: 40px;
+            margin-bottom: 25px;
+            background: var(--primary-light);
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        h3 {
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin-top: 30px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .mermaid {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-light);
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .viva-box {
+            background: #fdfdfd;
+            border: 1px solid var(--border);
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .q-block {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .question {
+            font-weight: 700;
+            color: var(--secondary);
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .answer {
+            color: #4b5563;
+            display: block;
+            padding-left: 15px;
+            border-left: 3px solid var(--border);
+        }
+
+        .footer {
+            margin-top: 80px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; width: 100%; max-width: 100%; padding: 0; }
+            .no-print { display: none; }
+            .mermaid { border: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>DATA-DRIVEN STOCK MARKET PREDICTION</h1>
+            <div class="subtitle">Utilizing LSTM, Random Forest, and NLP for Financial Forecasting</div>
+            <p style="text-align: center; font-weight: 600; margin-top:20px;">A Full Project Implementation Report</p>
+        </header>
+
+        <section id="abstract">
+            <h2>1. ABSTRACT</h2>
+            <p>
+                This project presents a comprehensive stock market prediction system that leverages the power of deep learning, ensemble machine learning, and natural language processing (NLP). By integrating historical price data from Yahoo Finance with real-time sentiment analysis of global news, the system provides a holistic view of market trends. The core implementation features a Long Short-Term Memory (LSTM) network for capturing sequential price patterns and a Random Forest Regressor for robust baseline comparisons. Furthermore, a specialized FinBERT model analyzes financial headlines to gauge the qualitative "mood" of the market, offering a unique multidimensional forecasting tool for retail investors.
+            </p>
+        </section>
+
+        <section id="introduction">
+            <h2>2. INTRODUCTION</h2>
+            <p>
+                The stock market is a highly complex and dynamic system influenced by numerous factors ranging from economic indicators to political news and investor psychology. Traditional technical analysis often falls short because it ignores the qualitative impact of global news. This project aims to bridge that gap by building a platform that not only visualizes data but also predicts future outcomes using hybrid methodologies.
+            </p>
+            <h3>2.1 Project Objectives</h3>
+            <ul>
+                <li>To develop a real-time dashboard for tracking 100+ global stocks.</li>
+                <li>To implement time-series forecasting using LSTM (Recurrent Neural Networks).</li>
+                <li>To provide sentiment insights using Google's BERT architecture (FinBERT).</li>
+                <li>To simulate a trading environment for portfolio management.</li>
+            </ul>
+        </section>
+
+        <section id="design">
+            <h2>3. SYSTEM DESIGN & ARCHITECTURE</h2>
+            <p>The system follows a modular architecture where the Node.js backend acts as an orchestrator, and Python scripts handle the heavy machine learning computations.</p>
+            
+            <h3>3.1 High-Level Architecture</h3>
+            <div class="mermaid">
+                graph TD
+                    A[Yahoo Finance API] -->|Historical + Live Data| B(Node.js Backend)
+                    B -->|Spawn Child Process| C{Python AI Engine}
+                    C -->|Predicts| D[LSTM Model]
+                    C -->|Predicts| E[Random Forest]
+                    C -->|Analyzes Sentiment| F[FinBERT NLP]
+                    D & E & F -->|JSON Result| B
+                    B -->|Socket.io / REST| G[HTML5 Dashboard]
+                    H[(MongoDB)] <-->|Store Users & Portfolios| B
+            </div>
+
+            <h3>3.2 Database Schema (ER Mini-Map)</h3>
+            <div class="mermaid">
+                erDiagram
+                    USER ||--o{ TRANSACTION : creates
+                    USER ||--o{ HOLDING : owns
+                    STOCK ||--o{ TRANSACTION : involved_in
+                    STOCK ||--o{ HOLDING : identifies
+                    USER {
+                        string name
+                        string email
+                        float balance
+                    }
+                    STOCK {
+                        string symbol
+                        float currentPrice
+                    }
+                    TRANSACTION {
+                        string type
+                        int quantity
+                        date timestamp
+                    }
+            </div>
+        </section>
+
+        <section id="methodology">
+            <h2>4. RESEARCH METHODOLOGY</h2>
+            
+            <h3>4.1 LSTM (Long Short-Term Memory)</h3>
+            <p>
+                Stock data is intrinsically non-linear and sequential. Unlike standard feed-forward networks, LSTM uses a "gated" architecture (Forget Gate, Input Gate, Output Gate) to decide which historical price movements are important. In this project, we use a 60-day window to predict the 61st day's price.
+            </p>
+
+            <h3>4.2 FinBERT for Sentiment Analysis</h3>
+            <p>
+                We utilize the ProsusAI/finbert model. FinBERT is a pre-trained NLP model specifically fine-tuned on financial corpora. It categorizes news headlines into Positive, Negative, or Neutral sentiments with significantly higher accuracy than generic sentiment models like VADER.
+            </p>
+
+            <h3>4.3 Hardware & Software Requirements</h3>
+            <table>
+                <tr>
+                    <th>Requirement Type</th>
+                    <th>Specification</th>
+                </tr>
+                <tr>
+                    <td><strong>Operating System</strong></td>
+                    <td>Windows 10/11 or Ubuntu 20.04+</td>
+                </tr>
+                <tr>
+                    <td><strong>Runtime Environment</strong></td>
+                    <td>Node.js v18.x and Python 3.11.x</td>
+                </tr>
+                <tr>
+                    <td><strong>Primary Frameworks</strong></td>
+                    <td>Express.js, TensorFlow 2.x, PyTorch</td>
+                </tr>
+                <tr>
+                    <td><strong>Database</strong></td>
+                    <td>MongoDB (NoSQL)</td>
+                </tr>
+                <tr>
+                    <td><strong>Minimum RAM</strong></td>
+                    <td>8GB (16GB recommended for ML training)</td>
+                </tr>
+            </table>
+        </section>
+
+        <div class="page-break"></div>
+
+        <section id="viva">
+            <h2>5. VIVA VOCE: FREQUENTLY ASKED QUESTIONS</h2>
+            <div class="viva-box">
+                
+                <div class="q-block">
+                    <span class="question">Q1: What is the main USP (Unique Selling Proposition) of your project?</span>
+                    <span class="answer">The integration of qualitative analysis (News Sentiment) with quantitative forecasting (LSTM Price Tracking), providing a dual-layered insight that most basic stock predictors lack.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q2: Why did you choose MongoDB instead of SQL?</span>
+                    <span class="answer">Financial data, especially news and watchlists, can vary in structure. MongoDB’s NoSQL architecture allows for easy scaling and flexible data schemas for various stock types.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q3: What are "Vanishing Gradients" and how did LSTM solve it?</span>
+                    <span class="answer">In traditional RNNs, gradients get smaller as they propagate back through time, causing the network to "forget." LSTM solves this using a "constant error carousel" through its gate structure.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q4: How do you handle the real-time nature of stock prices?</span>
+                    <span class="answer">We use Socket.io for live updates and a caching mechanism in our Stock Controller to prevent API rate limits from Yahoo Finance while keeping data fresh.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q5: What is the significance of the `bcryptjs` library in your project?</span>
+                    <span class="answer">Security. We never store raw user passwords. Bcryptjs hashes the passwords before saving them to MongoDB, ensuring that even if the database is compromised, user accounts remain safe.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q6: How does the model perform if the news is very volatile?</span>
+                    <span class="answer">While the price model might see a lag, the FinBERT sentiment model captures volatility immediately, shifting the "sentiment score" and warning the user of potential downward or upward pressure.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q7: Can this system be used for High-Frequency Trading (HFT)?</span>
+                    <span class="answer">No, this is designed for retail swing and intraday analysis. HFT requires sub-millisecond execution and direct market access (DMA), whereas our system relies on public web-based data.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q8: What is "Root Mean Square Error" (RMSE) in your evaluation?</span>
+                    <span class="answer">RMSE is a measure of the differences between values predicted by a model and the values observed. Lower RMSE indicates a more accurate price prediction.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q9: Why use the `child_process.spawn` function in Node.js?</span>
+                    <span class="answer">To run Python ML scripts from our JavaScript backend. It allows us to pass real-time stock symbols to Python and receive JSON-formatted predictions back.</span>
+                </div>
+
+                <div class="q-block">
+                    <span class="question">Q10: What is the future scope of this project?</span>
+                    <span class="answer">We plan to integrate actual Trading APIs (like Zerodha or Alpaca) for real-money execution and add advanced technical indicators like RSI and Bollinger Bands.</span>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="conclusion">
+            <h2>6. CONCLUSION</h2>
+            <p>
+                The project successfully demonstrates that while individual models have limitations, a hybrid system—combining historical mathematics (LSTM) with modern semantic understanding (NLP)—provides a superior analysis tool. The implementation of a real-time dashboard and portfolio simulation makes it highly practical for students and retail traders to learn the intricacies of the financial markets.
+            </p>
+        </section>
+
+        <div class="footer">
+            &copy; 2024 Stock Market Forecasting System | Technical Documentation
+        </div>
+    </div>
+</body>
+</html>

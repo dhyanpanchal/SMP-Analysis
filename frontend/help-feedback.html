@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Help &amp; Feedback - Stock Market Prediction</title>
+  <meta name="description" content="Submit help and feedback for Stock Market Prediction platform." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+  <style>
+    .feedback-form {
+      background: var(--surface-low);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      max-width: 600px;
+    }
+
+    .star-rating {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+      gap: 5px;
+      margin-bottom: 20px;
+    }
+
+    .star-rating input {
+      display: none;
+    }
+
+    .star-rating label {
+      font-size: 24px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .star-rating input:checked~label,
+    .star-rating label:hover,
+    .star-rating label:hover~label {
+      color: #f5a623;
+    }
+
+    #ratingContainer {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="cursor-blob" id="cursorBlob"></div>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Top Right Action Bar -->
+  <div class="fixed-top-right">
+    <!-- Auth Buttons -->
+    <div id="authButtons" class="auth-buttons" style="display: none;">
+      <a href="login.html" class="btn btn-secondary">Login</a>
+      <a href="register.html" class="btn">Register</a>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="btn btn-secondary" type="button" title="Toggle Theme">
+      <span id="themeIcon">☀️</span>
+    </button>
+
+    <!-- Profile Button -->
+    <button id="profileBtn" class="profile-avatar-btn" type="button" style="display: none;">
+      <span id="profileInitial">P</span>
+    </button>
+  </div>
+
+  <div class="layout" id="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a href="dashboard.html" class="brand-link" aria-label="Stock Market Prediction Home">
+        <div class="brand-logo-mark">
+          <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="11" width="2.2" height="6" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="10.4" y="7" width="2.2" height="10" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="16.8" y="4" width="2.2" height="8" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <path d="M3 17.5L8.5 12L13 16.5L21 6.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 6.5H21V11.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="21" cy="6.5" r="2" fill="#38bdf8"/>
+          </svg>
+        </div>
+        <div class="brand-details">
+          <div class="brand-name-row">
+            <span class="brand-name">SMP</span>
+            <span class="brand-tag">AI</span>
+          </div>
+          <span class="brand-tagline">Stock Prediction</span>
+        </div>
+      </a>
+
+      <!-- Investment Summary Card -->
+      <div class="investment-card" id="investmentCard">
+        <div class="investment-label">Total Investment</div>
+        <div class="investment-row">
+          <span class="investment-amount" id="totalInvestment">—</span>
+          <span class="investment-change" id="investmentChange"></span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-link" href="dashboard.html">
+          <span class="material-icons-round" style="font-size:20px">space_dashboard</span>
+          Dashboard
+        </a>
+        <a class="nav-link" href="prediction.html">
+          <span class="material-icons-round" style="font-size:20px">query_stats</span>
+          Prediction
+        </a>
+        <a class="nav-link" href="portfolio.html">
+          <span class="material-icons-round"
+            style="font-size:20px; vertical-align:text-bottom;">account_balance_wallet</span> Portfolio
+        </a>
+        <a class="nav-link" href="sentiment.html">
+          <span class="material-icons-round" style="font-size:20px; vertical-align:text-bottom;">analytics</span>
+          Sentiment
+        </a>
+        <a class="nav-link active" href="help-feedback.html" aria-current="page">
+          <span class="material-icons-round" style="font-size:20px; vertical-align:text-bottom;">forum</span> Help &amp; Feedback
+        </a>
+        <a class="nav-link" href="about-us.html">
+          <span class="material-icons-round" style="font-size:20px; vertical-align:text-bottom;">info</span> About Us
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-secondary btn-full" type="button" style="justify-content:flex-start;">
+          <span class="material-icons-round" style="font-size:18px">logout</span>
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <!-- Sidebar toggle button -->
+        <button id="sidebarToggle" class="sidebar-toggle-btn" type="button" aria-label="Toggle navigation" aria-expanded="true" aria-controls="sidebar">
+          <span class="material-icons-round" style="font-size:22px">menu</span>
+        </button>
+        <div>
+          <h1 class="page-title">Help &amp; Feedback</h1>
+          <p style="margin-top:4px; color:var(--muted);">We value your thoughts and are here to help.</p>
+        </div>
+      </header>
+
+      <div style="display:flex; justify-content: center; padding-top: 20px;">
+        <!-- Form Section -->
+        <div style="width: 100%; max-width: 650px;">
+          <div class="feedback-form">
+            <h2 style="font-family:'Manrope',sans-serif; font-size:20px; margin-bottom: 20px;">Send a Message</h2>
+            <form id="feedbackForm" class="form">
+              <div style="display: flex; gap: 15px;">
+                <label style="flex:1;">
+                  Name
+                  <input type="text" id="fbName" required placeholder="Enter your name" />
+                </label>
+                <label style="flex:1;">
+                  Email
+                  <input type="email" id="fbEmail" required placeholder="Enter your email" />
+                </label>
+              </div>
+
+              <label style="margin-top: 15px;">
+                Type of request
+                <select id="fbType"
+                  style="margin-top:4px;width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--surface-high);color:var(--text);border:1px solid var(--border);"
+                  required>
+                  <option value="help">Help / Support</option>
+                  <option value="feedback">Feedback / Suggestion</option>
+                </select>
+              </label>
+
+              <!-- Star Rating shown only for feedback -->
+              <div id="ratingContainer" style="margin-top: 15px;">
+                <label>Rate your experience</label>
+                <div class="star-rating">
+                  <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stars">★</label>
+                  <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars">★</label>
+                  <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars">★</label>
+                  <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars">★</label>
+                  <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star">★</label>
+                </div>
+              </div>
+
+              <label style="margin-top: 15px;">
+                Subject
+                <input type="text" id="fbSubject" placeholder="Brief subject" />
+              </label>
+
+              <label style="margin-top: 15px;">
+                Message
+                <textarea id="fbMessage" rows="5" required placeholder="Write your message here..."
+                  style="width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--surface-high);color:var(--text);border:1px solid var(--border);resize:vertical;"></textarea>
+              </label>
+
+              <button class="btn" type="submit" style="margin-top: 20px; width: 100%;">Submit</button>
+              <p id="fbMsg" class="msg" style="margin-top: 15px; text-align: center;"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/help-feedback.js"></script>
+  <script src="js/sidebar-toggle.js"></script>
+</body>
+
+</html>

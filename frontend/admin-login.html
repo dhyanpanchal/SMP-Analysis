@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — Stock Market Prediction</title>
+  <meta name="description" content="Secure administrator login portal for Stock Market Prediction platform." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    document.documentElement.setAttribute('data-theme', 'dark');
+  
+// ── Password Visibility Toggle ───────────────────────────
+function initPasswordToggles() {
+  document.querySelectorAll('.password-toggle-btn').forEach((btn) => {
+    if (btn.dataset.initialized) return;
+    btn.dataset.initialized = 'true';
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const wrap = btn.closest('.password-wrapper, .admin-input-wrap') || btn.parentElement;
+      const input = wrap ? wrap.querySelector('input') : null;
+      if (!input) return;
+
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+
+      btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+      btn.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+
+      const eyeShow = btn.querySelector('.eye-show');
+      const eyeHide = btn.querySelector('.eye-hide');
+      if (eyeShow && eyeHide) {
+        eyeShow.style.display = isPassword ? 'none' : 'block';
+        eyeHide.style.display = isPassword ? 'block' : 'none';
+      }
+
+      input.focus();
+      try {
+        const len = input.value.length;
+        input.setSelectionRange(len, len);
+      } catch (_) {}
+    });
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPasswordToggles);
+} else {
+  initPasswordToggles();
+}
+
+  </script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" />
+  <style>
+    /* ── Admin Login Overrides ─────────────────────────────── */
+    .admin-login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .admin-login-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-elevated);
+      border-radius: var(--radius-2xl);
+      padding: 44px 40px;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .admin-login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #f23d5c, #4f7cff, #00c070);
+      border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    }
+
+    .admin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(242, 61, 92, 0.1);
+      border: 1px solid rgba(242, 61, 92, 0.2);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f23d5c;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .admin-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #f23d5c;
+      animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-red {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+      }
+    }
+
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .admin-logo-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #1a1f3c 0%, #2a3860 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(79, 124, 255, 0.3);
+    }
+
+    .admin-logo-text h1 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .admin-logo-text p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 2px 0 0;
+    }
+
+    .admin-form-title {
+      margin: 24px 0 4px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .admin-form-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .admin-input-wrap {
+      position: relative;
+    }
+
+    .admin-input-wrap .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 18px;
+      pointer-events: none;
+      font-family: 'Material Icons Round', sans-serif;
+    }
+
+    .admin-input-wrap input {
+      padding-right: 44px;
+      padding-left: 44px;
+    }
+
+    .admin-submit-btn {
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: linear-gradient(135deg, #1a1f3c 0%, #2a3860 100%);
+      color: #fff;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      box-shadow: 0 4px 16px rgba(26, 31, 60, 0.3);
+    }
+
+    .admin-submit-btn:hover {
+      filter: brightness(1.2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(26, 31, 60, 0.4);
+    }
+
+    .admin-submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .admin-submit-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: var(--transition-fast);
+    }
+
+    .back-link:hover {
+      color: var(--accent);
+    }
+
+    .error-banner {
+      background: rgba(242, 61, 92, 0.1);
+      border: 1px solid rgba(242, 61, 92, 0.2);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #f23d5c;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .error-banner.show {
+      display: flex;
+    }
+
+    /* Floating ambient orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb-1 {
+      width: 500px;
+      height: 500px;
+      top: -150px;
+      right: -100px;
+      background: radial-gradient(circle, rgba(242, 61, 92, 0.06) 0%, transparent 70%);
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      bottom: -100px;
+      left: -100px;
+      background: radial-gradient(circle, rgba(79, 124, 255, 0.06) 0%, transparent 70%);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="cursor-blob" id="cursorBlob"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="admin-login-wrap">
+    <div class="admin-login-card">
+      <div class="admin-badge">
+        <span class="admin-badge-dot"></span>
+        Admin Portal
+      </div>
+
+      <div class="admin-logo">
+        <div class="admin-logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="11" width="2.2" height="6" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="10.4" y="7" width="2.2" height="10" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="16.8" y="4" width="2.2" height="8" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <path d="M3 17.5L8.5 12L13 16.5L21 6.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 6.5H21V11.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="21" cy="6.5" r="2" fill="#f43f5e"/>
+          </svg>
+        </div>
+        <div class="admin-logo-text">
+          <h1>SMP Admin</h1>
+          <p>Restricted Access Only</p>
+        </div>
+      </div>
+
+      <p class="admin-form-title">Welcome back, Admin</p>
+      <p class="admin-form-sub">Enter your credentials to access the control panel</p>
+
+      <div class="error-banner" id="errorBanner">
+        <span style="font-size:16px;">⚠</span>
+        <span id="errorMsg">Invalid credentials. Please try again.</span>
+      </div>
+
+      <form class="form" id="adminLoginForm" style="margin-top: 0;">
+        <label>
+          Username
+          <div class="admin-input-wrap">
+            <span class="input-icon">person</span>
+            <input type="text" id="adminUsername" name="username" placeholder="admin" required
+              autocomplete="username" />
+          </div>
+        </label>
+        <label>
+          Password
+          <div class="admin-input-wrap">
+            <span class="input-icon">lock</span>
+            <input type="password" id="adminPassword" name="password" placeholder="••••••••" required
+              autocomplete="current-password" />
+            <button type="button" class="password-toggle-btn" aria-label="Show password" title="Show password">
+              <svg class="eye-icon eye-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg class="eye-icon eye-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+        </label>
+        <button type="submit" class="admin-submit-btn" id="loginBtn">
+          <span style="font-size:18px; font-family:'Material Icons Round'">shield</span>
+          Access Admin Panel
+        </button>
+      </form>
+
+      <a href="dashboard.html" class="back-link">
+        <span style="font-size:16px; font-family:'Material Icons Round'">arrow_back</span>
+        Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Cursor blob
+    const blob = document.getElementById('cursorBlob');
+    let bx = window.innerWidth / 2, by = window.innerHeight / 2;
+    let cx = bx, cy = by;
+    document.addEventListener('mousemove', e => { bx = e.clientX; by = e.clientY; });
+    function animateBlob() {
+      cx += (bx - cx) * 0.08;
+      cy += (by - cy) * 0.08;
+      blob.style.left = cx + 'px';
+      blob.style.top = cy + 'px';
+      requestAnimationFrame(animateBlob);
+    }
+    animateBlob();
+
+    // Dark mode (Forced for Admin)
+    document.documentElement.setAttribute('data-theme', 'dark');
+
+    // Admin Login
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:5000' : window.location.origin;
+
+    document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const banner = document.getElementById('errorBanner');
+      const errorMsg = document.getElementById('errorMsg');
+
+      btn.classList.add('loading');
+      btn.textContent = 'Authenticating...';
+      banner.classList.remove('show');
+
+      const username = document.getElementById('adminUsername').value.trim();
+      const password = document.getElementById('adminPassword').value;
+
+      try {
+        const res = await fetch(API_BASE + '/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success && data.token) {
+          localStorage.setItem('adminToken', data.token);
+          window.location.href = 'admin.html';
+        } else {
+          errorMsg.textContent = data.message || 'Invalid admin credentials.';
+          banner.classList.add('show');
+          btn.classList.remove('loading');
+          btn.innerHTML = '<span style="font-size:18px; font-family:\'Material Icons Round\'">shield</span> Access Admin Panel';
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Connection error. Please check the server.';
+        banner.classList.add('show');
+        btn.classList.remove('loading');
+        btn.innerHTML = '<span style="font-size:18px; font-family:\'Material Icons Round\'">shield</span> Access Admin Panel';
+      }
+    });
+  </script>
+</body>
+
+</html>

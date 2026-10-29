@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Stock Market Prediction</title>
+  <meta name="description" content="Real-time Indian stock market dashboard with portfolio tracking, watchlist, and AI predictions." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+
+<body>
+  <!-- 3D Cursor Blob — Ambient Glass Light Source -->
+  <div class="cursor-blob" id="cursorBlob"></div>
+
+  <!-- Top Right Action Bar -->
+  <div class="fixed-top-right">
+    <!-- Auth Buttons -->
+    <div id="authButtons" class="auth-buttons" style="display: none;">
+      <a href="login.html" class="btn btn-secondary">Login</a>
+      <a href="register.html" class="btn">Register</a>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="btn btn-secondary" type="button" title="Toggle Theme">
+      <span id="themeIcon">☀️</span>
+    </button>
+
+    <!-- Profile Button -->
+    <button id="profileBtn" class="profile-avatar-btn" type="button" style="display: none;">
+      <span id="profileInitial">P</span>
+    </button>
+  </div>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout" id="layout">
+    <!-- ═══ SIDEBAR — GoStock-Inspired ═══ -->
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a href="dashboard.html" class="brand-link" aria-label="Stock Market Prediction Home">
+        <div class="brand-logo-mark">
+          <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="11" width="2.2" height="6" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="10.4" y="7" width="2.2" height="10" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <rect x="16.8" y="4" width="2.2" height="8" rx="1.1" fill="#ffffff" fill-opacity="0.35"/>
+            <path d="M3 17.5L8.5 12L13 16.5L21 6.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 6.5H21V11.5" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="21" cy="6.5" r="2" fill="#38bdf8"/>
+          </svg>
+        </div>
+        <div class="brand-details">
+          <div class="brand-name-row">
+            <span class="brand-name">SMP</span>
+            <span class="brand-tag">AI</span>
+          </div>
+          <span class="brand-tagline">Stock Prediction</span>
+        </div>
+      </a>
+
+      <!-- Investment Summary Card -->
+      <div class="investment-card" id="investmentCard">
+        <div class="investment-label">Total Investment</div>
+        <div class="investment-row">
+          <span class="investment-amount" id="totalInvestment">—</span>
+          <span class="investment-change" id="investmentChange"></span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-link active" href="dashboard.html" aria-current="page">
+          <span class="material-icons-round" style="font-size:20px">space_dashboard</span>
+          Dashboard
+        </a>
+        <a class="nav-link" href="prediction.html">
+          <span class="material-icons-round" style="font-size:20px">query_stats</span>
+          Prediction
+        </a>
+        <a class="nav-link" href="portfolio.html">
+          <span class="material-icons-round" style="font-size:20px; vertical-align:text-bottom;">account_balance_wallet</span> Portfolio
+        </a>
+        <a class="nav-link" href="sentiment.html">
+          <span class="material-icons-round" style="font-size:20px; vertical-align:text-bottom;">analytics</span> Sentiment
+        </a>
+        <a class="nav-link" href="help-feedback.html">
+          <span class="material-icons-round" style="font-size:20px; vertical-align:text-bottom;">forum</span> Help & Feedback
+        </a>
+        <a class="nav-link" href="about-us.html">
+          <span class="material-icons-round" style="font-size:20px; vertical-align:text-bottom;">info</span> About Us
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-secondary btn-full" type="button" style="justify-content:flex-start;">
+          <span class="material-icons-round" style="font-size:18px">logout</span>
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="main">
+      <header class="topbar">
+        <!-- Sidebar toggle button -->
+        <button id="sidebarToggle" class="sidebar-toggle-btn" type="button" aria-label="Toggle navigation" aria-expanded="true" aria-controls="sidebar">
+          <span class="material-icons-round" style="font-size:22px">menu</span>
+        </button>
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p id="userInfo" style="margin-top:4px;">Loading user...</p>
+        </div>
+      </header>
+
+      <!-- ═══ PORTFOLIO CARDS — Horizontal Scroll ═══ -->
+      <section style="margin-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div>
+            <h2 style="font-family:'Manrope',sans-serif; font-size:18px; font-weight:700; margin:0; color:var(--text);">My Portfolio</h2>
+            <p style="font-size:13px; color:var(--muted); margin:4px 0 0;">Live performance of your assets</p>
+          </div>
+          <button id="refreshBtn" class="btn btn-secondary btn-sm" type="button">
+            <span class="material-icons-round" style="font-size:16px">refresh</span>
+            Refresh
+          </button>
+        </div>
+        <div class="portfolio-scroll" id="portfolioScroll">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ═══ DASHBOARD CONTENT — Chart + Watchlist ═══ -->
+      <div class="dashboard-content">
+        <!-- LEFT: Market Table -->
+        <div class="dashboard-left">
+          <div class="card">
+            <div class="card-head">
+              <h2 class="card-title">Market Prices</h2>
+              <span style="font-size:12px; color:var(--muted);">NSE · BSE</span>
+            </div>
+
+            <div class="table-wrap" style="max-height: 55vh; overflow-y: auto;">
+              <table class="table" id="marketTable">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <p id="dashMsg" class="msg"></p>
+          </div>
+        </div>
+
+        <!-- RIGHT: Watchlist + Pro Tip -->
+        <div class="dashboard-right">
+          <div class="watchlist-section">
+            <div class="watchlist-header">
+              <h3>My Watchlist</h3>
+              <button class="watchlist-add" title="Add to watchlist">+</button>
+            </div>
+            <div id="watchlistContainer">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Pro Tip Card -->
+          <div class="pro-tip-card">
+            <div class="tip-icon">
+              <span class="material-icons-round" style="font-size:18px">auto_awesome</span>
+            </div>
+            <div>
+              <div class="tip-label">Pro Tip</div>
+              <div class="tip-text">Maximize your returns with AI-powered predictions. Visit the Prediction tab to get started.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+      <!-- ═══ TRADE MODAL ═══ -->
+      <div class="modal" id="tradeModal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card" style="max-width: 480px;">
+          <div class="modal-head">
+            <h3 class="modal-title" id="tradeTitle">Trade</h3>
+            <button class="icon-btn" type="button" data-close="true">✕</button>
+          </div>
+          <form id="tradeForm" class="form" style="margin-top:0;">
+            <input type="hidden" name="symbol" />
+            <input type="hidden" name="side" />
+            <label>
+              Quantity
+              <input type="number" name="quantity" min="1" step="1" required />
+            </label>
+            <label>
+              Price (use current price)
+              <input type="number" name="price" min="0" step="0.01" required />
+            </label>
+            <button class="btn" type="submit">Confirm Trade</button>
+            <p class="msg" id="tradeMsg"></p>
+          </form>
+        </div>
+      </div>
+
+      <!-- ═══ PROFILE MODAL ═══ -->
+      <div class="modal" id="profileModal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card" style="max-width: 480px;">
+          <div class="modal-head">
+            <h3 class="modal-title">User Profile</h3>
+            <button class="icon-btn" type="button" data-close="true">✕</button>
+          </div>
+          <div class="modal-body">
+            <div id="profileContent">
+              <p class="muted">Loading profile...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CHART MODAL ═══ -->
+      <div class="modal" id="chartModal" aria-hidden="true">
+        <div class="modal-backdrop" data-close-chart="true"></div>
+        <div class="modal-card" style="max-width: 95vw; width: 1200px;">
+          <div class="modal-head">
+            <h3 class="modal-title" id="chartTitle">Stock Chart</h3>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <button id="fullscreenBtn" class="icon-btn" type="button" title="Toggle fullscreen">⛶</button>
+              <button class="icon-btn" type="button" data-close-chart="true">✕</button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm" data-range="1d" data-interval="1m">1 Day</button>
+              <button class="btn btn-secondary btn-sm" data-range="5d" data-interval="15m">5 Days</button>
+              <button class="btn btn-secondary btn-sm" data-range="1mo" data-interval="1h">1 Month</button>
+              <button class="btn btn-secondary btn-sm" data-range="3mo" data-interval="1d">3 Months</button>
+              <button class="btn btn-secondary btn-sm" data-range="6mo" data-interval="1d">6 Months</button>
+              <button class="btn btn-secondary btn-sm" data-range="1y" data-interval="1d">1 Year</button>
+            </div>
+
+            <!-- Market Summary -->
+            <div id="marketSummary" class="market-summary">
+              <div class="summary-main">
+                <div class="summary-price-group">
+                  <span id="livePrice" class="live-price">₹0.00</span>
+                  <span id="liveChange" class="live-change">+0.00 (+0.00%)</span>
+                </div>
+                <div class="summary-stats">
+                  <div class="stat-item"><span class="stat-label">Day High</span><span id="dayHigh" class="stat-value">—</span></div>
+                  <div class="stat-item"><span class="stat-label">Day Low</span><span id="dayLow" class="stat-value">—</span></div>
+                  <div class="stat-item"><span class="stat-label">Prev Close</span><span id="prevClose" class="stat-value">—</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- OHLC Panel -->
+            <div id="ohlcPanel" class="ohlc-panel">
+              <div class="ohlc-group">
+                <div class="ohlc-item"><span class="ohlc-label">Open</span><span id="ohlcOpen" class="ohlc-value">—</span></div>
+                <div class="ohlc-item"><span class="ohlc-label">High</span><span id="ohlcHigh" class="ohlc-value">—</span></div>
+                <div class="ohlc-item"><span class="ohlc-label">Low</span><span id="ohlcLow" class="ohlc-value">—</span></div>
+                <div class="ohlc-item"><span class="ohlc-label">Close</span><span id="ohlcClose" class="ohlc-value">—</span></div>
+                <div class="ohlc-item"><span class="ohlc-label">Vol</span><span id="ohlcVolume" class="ohlc-value">—</span></div>
+              </div>
+              <div class="ohlc-time-group">
+                <span id="ohlcTime" class="ohlc-time-value">—</span>
+              </div>
+            </div>
+
+            <div id="chartContainer"></div>
+            <p id="chartMsg" class="msg" style="margin-top: 1rem;"></p>
+          </div>
+        </div>
+      </div>
+
+    <script src="js/dashboard.js?v=3"></script>
+    <script src="js/sidebar-toggle.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        try {
+          const socket = io(); // Connects to the server to increment active connections
+        } catch (e) {
+          console.log("Socket connection failed");
+        }
+      });
+    </script>
+</body>
+</html>
